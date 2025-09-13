@@ -1,0 +1,12 @@
+{
+    "has_update": true,
+    "type": "sota",
+    "version": "1.3.0",
+    "files": [
+      {
+        "url": "http://ec7b332f9190.ngrok-free.app/files/app.bin",
+        "file_name": "/usr/app.bin"
+        
+      }
+    ]
+  }
