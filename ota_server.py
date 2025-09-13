@@ -100,7 +100,7 @@ class Handler(SimpleHTTPRequestHandler):
         self.wfile.write(payload)
 
 if __name__ == "__main__":
-    port = 8000
+    port = int(os.getenv("PORT", "8000"))
     print(f"Serving OTA locally on http://0.0.0.0:{port}")
     print(f"Using update dir: {UPDATE_DIR}")
     print(f"Using files dir : {FILES_DIR}")

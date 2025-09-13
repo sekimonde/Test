@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: ota-local-server
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python ota_server.py"
+    healthCheckPath: "/healthz"
+    autoDeploy: true
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
