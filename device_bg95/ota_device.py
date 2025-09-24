@@ -18,9 +18,9 @@ PROJECT_VERSION = "1.0.0"
 # ---------------------------
 # CONFIG
 # ---------------------------
-UPDATE_BASE_URL = "http://ec7b332f9190.ngrok-free.app/update"     # <-- à adapter
-REPORT_URL      = "http://ec7b332f9190.ngrok-free.app/report"     # <-- à adapter (endpoint de statut)
-POLL_INTERVAL_SEC = 30                       # 6h
+UPDATE_BASE_URL = "https://ota-local-server.onrender.com/update"     
+REPORT_URL      = "https://postman-echo.com/post"     
+POLL_INTERVAL_SEC = 60                      # 6h
 JITTER_SEC = 1                                        # +/- 60s pour désynchroniser
 CA_CERT_PATH = "/usr/ca.crt"                           # déployer votre CA ici (PEM)
 STATE_PATH = "/usr/ota_state.json"                     # persistance simple
@@ -110,8 +110,7 @@ def _tee_print(*args, **kwargs):
     except Exception as e:
         _original_print("[LOG] tee error:", e)
 
-# redirige print vers tee (console + fichier)
-builtins.print = _tee_print
+
 
 print("=== OTA client starting ===", PROJECT_NAME, PROJECT_VERSION)
 
@@ -223,20 +222,27 @@ def ensure_network(timeout=60):
 # ---------------------------
 # HTTP GET (update manifest)
 # ---------------------------
-def http_get_json(url, ca_pem=None, timeout=REQUEST_TIMEOUT):
+# HTTP GET (update manifest)
+# ---------------------------
+def http_get_json(url, timeout):
+    
+    resp = request.get(url, timeout=timeout)
+    if resp is None:
+        raise Exception("No response")
+        print("no reponse")
+    text = resp.text
+    obj=''
+    for i in text:
+        obj+=i
+        utime.sleep_ms(10)
     try:
-        if ca_pem:
-            resp = request.get(url, timeout=timeout, ca=ca_pem)
-        else:
-            resp = request.get(url, timeout=timeout)
-        if resp is None:
-            raise Exception("No response")
-        text = resp.text
-        resp.close()
-        return ujson.loads(text)
+        json = ujson.loads(obj)
+        return json
     except Exception as e:
-        print("[HTTP] GET error:", e)
+        print("[HTTP] Error parsing JSON:", e)
         return None
+    return None
+
 
 # ---------------------------
 # APPLY UPDATES
@@ -304,7 +310,7 @@ def do_sota(file_list, target_version=None):
         af.set_update_flag()
         print("[SOTA] set_update_flag OK -> restarting...")
         utime.sleep(2)
-        Power.powerRestart()
+        #Power.powerRestart()
         return True  # ne revient normalement pas
     except Exception as e:
         print("[SOTA] exception:", e)
@@ -319,8 +325,7 @@ def poll_once():
     url = "{}/{}".format(UPDATE_BASE_URL.rstrip("/"), imei)
     print("[POLL] GET", url)
 
-    ca_pem = read_text(CA_CERT_PATH)
-    manifest = http_get_json(url, ca_pem)
+    manifest = http_get_json(url,100)
     if not manifest:
         print("[POLL] No manifest / HTTP error")
         record_and_report("no_manifest", detail="http error or empty", update_type=None)

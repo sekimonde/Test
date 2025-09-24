@@ -7,6 +7,8 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 # Servez explicitement depuis ota_local/
 FILES_DIR = os.path.join(BASE_DIR, "ota_local", "files")
 UPDATE_DIR = os.path.join(BASE_DIR, "ota_local", "update")
+# Fichier où l'on stocke temporairement le dernier JSON reçu via /report
+REPORT_FILE = os.path.join(BASE_DIR, "Export", "usr", "ota-status.json")
 
 class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -65,12 +67,25 @@ class Handler(SimpleHTTPRequestHandler):
             except Exception as e:
                 self._json(500, {"error": "file_serve_error", "detail": str(e), "path": filepath}); return
 
+        # /report/getjson -> renvoie le dernier JSON reçu et stocké
+        if parsed.path == "/report/getjson":
+            try:
+                if not os.path.exists(REPORT_FILE):
+                    self._json(404, {"error": "no_report_yet", "path": REPORT_FILE}); return
+                with open(REPORT_FILE, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                self._json(200, data)
+            except Exception as e:
+                self._json(500, {"error": "report_read_error", "detail": str(e), "path": REPORT_FILE})
+            return
+
         # page racine d'aide
         if parsed.path == "/":
             self._json(200, {
                 "message": "OTA local server up",
                 "update_example": "/update/867123456789012",
                 "report_endpoint": "/report",
+                "report_get": "/report/getjson",
                 "file_example": "/files/app.bin"
             }); return
 
@@ -87,7 +102,14 @@ class Handler(SimpleHTTPRequestHandler):
             except Exception:
                 data = {"raw": body.decode("utf-8", "ignore")}
             print("REPORT:", data)  # visible dans le terminal -> débogage
-            self._json(200, {"ok": True})
+            # Sauvegarde dans REPORT_FILE pour pouvoir le relire ensuite
+            try:
+                os.makedirs(os.path.dirname(REPORT_FILE), exist_ok=True)
+                with open(REPORT_FILE, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False)
+            except Exception as e:
+                self._json(500, {"error": "report_write_error", "detail": str(e), "path": REPORT_FILE}); return
+            self._json(200, {"ok": True, "stored_at": REPORT_FILE})
             return
         self._json(404, {"error": "not_found"})
 
@@ -105,6 +127,7 @@ if __name__ == "__main__":
     print(f"Using update dir: {UPDATE_DIR}")
     print(f"Using files dir : {FILES_DIR}")
     print("• GET  /update/IMEI  (serve update/IMEI.json)")
-    print("• POST /report         (prints JSON)")
+    print("• POST /report         (stores JSON)")
+    print("• GET  /report/getjson (returns last stored JSON)")
     print("• GET  /files/app.bin  (serves files/*)")
     HTTPServer(("0.0.0.0", port), Handler).serve_forever()
