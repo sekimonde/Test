@@ -18,9 +18,9 @@ PROJECT_VERSION = "1.0.0"
 # ---------------------------
 # CONFIG
 # ---------------------------
-UPDATE_BASE_URL = "https://ota-local-server.onrender.com/update"     
-REPORT_URL      = "https://postman-echo.com/post"     
-POLL_INTERVAL_SEC = 60                      # 6h
+UPDATE_BASE_URL = "172.236.29.24:5000/update"     
+REPORT_URL      = "172.236.29.24:5000/report"     
+POLL_INTERVAL_SEC = 40                      # 6h
 JITTER_SEC = 1                                        # +/- 60s pour désynchroniser
 CA_CERT_PATH = "/usr/ca.crt"                           # déployer votre CA ici (PEM)
 STATE_PATH = "/usr/ota_state.json"                     # persistance simple
@@ -219,9 +219,6 @@ def ensure_network(timeout=60):
     print("[NET] stage, sub =", stage, sub, "OK?" , ok)
     return ok
 
-# ---------------------------
-# HTTP GET (update manifest)
-# ---------------------------
 # HTTP GET (update manifest)
 # ---------------------------
 def http_get_json(url, timeout):
@@ -321,7 +318,7 @@ def do_sota(file_list, target_version=None):
 # MAIN POLLING LOGIC
 # ---------------------------
 def poll_once():
-    imei = "867123456789012" # modem.getDevImei()
+    imei = modem.getDevImei() # '864200057919152'
     url = "{}/{}".format(UPDATE_BASE_URL.rstrip("/"), imei)
     print("[POLL] GET", url)
 
@@ -332,7 +329,8 @@ def poll_once():
         return False
     
     print("[POLL] Manifest:", manifest)
-
+# Connexion réseau
+    
     # Anti-boucle: comparer avec dernier "applied_version" ou "last_seen_version"
     st = load_state()
     last_version = st.get("last_version")
@@ -391,7 +389,6 @@ def poll_once():
     return ok
 
 def main():
-    # Connexion réseau
     backoff = 5
     MAX_BACKOFF = 60
     while not ensure_network(60):

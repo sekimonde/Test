@@ -1,0 +1,14 @@
+{
+    "has_update": true,
+    "type": "sota",
+    "version": "2.0.0",
+    "files": [
+      { "url": "https://example.com/files/file1.extension",
+        "file_name": "file1.extension"
+      },
+      { "url": "https://example.com/files/file2.extension",
+        "file_name": "file2.extension"
+      }
+
+    ]
+  }

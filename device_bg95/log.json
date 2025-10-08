@@ -1,0 +1,7 @@
+ [
+    {"time": "1980-01-06 08:30:16", "message": "Premier message"},
+    {"time": "1980-01-06 08:30:16", "message": "Deuxième message"}, 
+    {"time": "1980-01-06 08:30:16","message": "Erreur lors de la redirection de stdout: 'module' object has no attribute 'stdout'"},
+    {"time": "1980-01-06 08:32:26", "message": "autre message de log ou d'erreur"}
+    
+]

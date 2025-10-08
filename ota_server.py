@@ -83,7 +83,7 @@ class Handler(SimpleHTTPRequestHandler):
         if parsed.path == "/":
             self._json(200, {
                 "message": "OTA local server up",
-                "update_example": "/update/867123456789012",
+                "update_example": "/update/864200057919152",
                 "report_endpoint": "/report",
                 "report_get": "/report/getjson",
                 "file_example": "/files/app.bin"
